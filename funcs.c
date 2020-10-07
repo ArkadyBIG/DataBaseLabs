@@ -56,38 +56,37 @@ int ind_pos_by_key(int key) {
     return -5;
 }
 
-Store get_stud_by_pos(int pos) {
+Store get_store_by_pos(int pos) {
     FILE *f = fopen("S.fl", "rb");
-    Store res = {-1, "\0", "\0", -1, -1,
-                 -1, "\0", "\0", -1, "\0", -1};
-    fseek(f, pos * STUD_SIZ, SEEK_SET);
-    fread(&res, STUD_SIZ, 1, f);
+    Store res = {-1, "0", "0", -1, -1};
+    fseek(f, pos * STORE_SIZE, SEEK_SET);
+    fread(&res, STORE_SIZE, 1, f);
     fclose(f);
     return res;
 }
 
 Store get_stud_by_key(int key) {
     Index ind = get_ind_by_key(key);
-    Store res = get_stud_by_pos(ind.pos);
+    Store res = get_store_by_pos(ind.pos);
     return res;
 }
 
 Custumer get_custumer_by_pos(int pos) {
     FILE *f = fopen("P.fl", "rb");
     Custumer res;
-    fseek(f, (pos + 1) * PROGR_SIZ, SEEK_SET);
-    fread(&res, PROGR_SIZ, 1, f);
+    fseek(f, (pos + 1) * CUSTUMER_SIZE, SEEK_SET);
+    fread(&res, CUSTUMER_SIZE, 1, f);
     fclose(f);
     return res;
 }
 
-Custumer get_progr_by_args(int key, const char *subj, int term) {
+Custumer get_customer_by_args(int key, const char *subj, int term) {
     Store student = get_stud_by_key(key);
-    Custumer cur = get_custumer_by_pos(student.first_progress_pos);
+    Custumer cur = get_custumer_by_pos(student._first_custumer_pos);
     int ret = 1;
     while (cur.balance != term || strcmp(subj, cur.product) != 0) {
-        if (cur.next_progress_pos > 0)
-            cur = get_custumer_by_pos(cur.next_progress_pos);
+        if (cur._next_customer_pos > 0)
+            cur = get_custumer_by_pos(cur._next_customer_pos);
         else {
             ret = 0;
             break;
@@ -98,14 +97,14 @@ Custumer get_progr_by_args(int key, const char *subj, int term) {
     return cur;
 }
 
-int get_custumer_pos(int key, const char *product_name, int balance) {
+int get_customer_pos(int key, const char *product_name, int balance) {
     Store student = get_stud_by_key(key);
-    Custumer cur = get_custumer_by_pos(student.first_progress_pos);
-    int ret = student.first_progress_pos;
+    Custumer cur = get_custumer_by_pos(student._first_custumer_pos);
+    int ret = student._first_custumer_pos;
     while (cur.balance != balance || strcmp(product_name, cur.product) != 0) {
-        if (cur.next_progress_pos > 0) {
-            ret = cur.next_progress_pos;
-            cur = get_custumer_by_pos(cur.next_progress_pos);
+        if (cur._next_customer_pos > 0) {
+            ret = cur._next_customer_pos;
+            cur = get_custumer_by_pos(cur._next_customer_pos);
         } else {
             ret = INVALID_PROGR_MARK;
             break;
@@ -116,8 +115,8 @@ int get_custumer_pos(int key, const char *product_name, int balance) {
 
 void edit_stud_by_pos(int pos, Store stud) {
     FILE *f = fopen("S.fl", "rb+");
-    fseek(f, pos * STUD_SIZ, SEEK_SET);
-    fwrite(&stud, STUD_SIZ, 1, f);
+    fseek(f, pos * STORE_SIZE, SEEK_SET);
+    fwrite(&stud, STORE_SIZE, 1, f);
     fclose(f);
 }
 
@@ -130,55 +129,55 @@ void edit_ind_by_pos(int pos, Index ind) {
 
 void edit_progr_by_pos(int pos, Custumer p) {
     FILE *f = fopen("P.fl", "rb+");
-    fseek(f, (pos + 1) * PROGR_SIZ, SEEK_SET);
-    fwrite(&p, PROGR_SIZ, 1, f);
+    fseek(f, (pos + 1) * CUSTUMER_SIZE, SEEK_SET);
+    fwrite(&p, CUSTUMER_SIZE, 1, f);
     fclose(f);
 }
 
 
-void del_progr_by_args(int key, const char *subj, int term) {
+void del_progr_by_args(int key, const char *product_name, int balance) {
     Store student = get_stud_by_key(key);
-    Custumer del = get_progr_by_args(key, subj, term);
-    int del_pos = student.first_progress_pos;
+    Custumer del = get_customer_by_args(key, product_name, balance);
+    int del_pos = student._first_custumer_pos;
     int prev_pos = del_pos;
-    while (get_custumer_by_pos(del_pos).balance != term || strcmp(subj, get_custumer_by_pos(del_pos).product) != 0) {
+    while (get_custumer_by_pos(del_pos).balance != balance || strcmp(product_name, get_custumer_by_pos(del_pos).product) != 0) {
         prev_pos = del_pos;
-        del_pos = get_custumer_by_pos(del_pos).next_progress_pos;
+        del_pos = get_custumer_by_pos(del_pos)._next_customer_pos;
     }
     if (prev_pos != del_pos) {
-        Custumer prev_progr = get_custumer_by_pos(prev_pos);
-        prev_progr.next_progress_pos = del.next_progress_pos;
-        edit_progr_by_pos(prev_pos, prev_progr);
+        Custumer prev_customer = get_custumer_by_pos(prev_pos);
+        prev_customer._next_customer_pos = del._next_customer_pos;
+        edit_progr_by_pos(prev_pos, prev_customer);
     } else {
-        student.first_progress_pos = del.next_progress_pos;
+        student._first_custumer_pos = del._next_customer_pos;
         edit_stud_by_pos(get_ind_by_key(key).pos, student);
     }
 
     Custumer info = get_custumer_by_pos(-1);
-    del.next_progress_pos = info.next_progress_pos;
-    info.next_progress_pos = del_pos;
+    del._next_customer_pos = info._next_customer_pos;
+    info._next_customer_pos = del_pos;
     --info._mark;
     edit_progr_by_pos(del_pos, del);
     edit_progr_by_pos(-1, info);
 }
 
 void del_all_progr_by_key(int key) {
-    Store stud = get_stud_by_key(key);
-    Custumer progr = get_custumer_by_pos(stud.first_progress_pos);
+    Store store = get_stud_by_key(key);
+    Custumer custumer = get_custumer_by_pos(store._first_custumer_pos);
     Custumer info = get_custumer_by_pos(-1);
-    int empty_pos = info.next_progress_pos;
-    info.next_progress_pos = stud.first_progress_pos;
+    int empty_pos = info._next_customer_pos;
+    info._next_customer_pos = store._first_custumer_pos;
     info._mark = info._mark - progr_num_by_key(key);
     edit_progr_by_pos(-1, info);
-    int pos = stud.first_progress_pos;
-    stud.first_progress_pos = -5;
-    edit_stud_by_pos(get_ind_by_key(key).pos, stud);
-    while (progr.next_progress_pos >= 0) {
-        pos = progr.next_progress_pos;
-        progr = get_custumer_by_pos(progr.next_progress_pos);
+    int pos = store._first_custumer_pos;
+    store._first_custumer_pos = -5;
+    edit_stud_by_pos(get_ind_by_key(key).pos, store);
+    while (custumer._next_customer_pos >= 0) {
+        pos = custumer._next_customer_pos;
+        custumer = get_custumer_by_pos(custumer._next_customer_pos);
     }
-    progr.next_progress_pos = empty_pos;
-    edit_progr_by_pos(pos, progr);
+    custumer._next_customer_pos = empty_pos;
+    edit_progr_by_pos(pos, custumer);
 }
 
 void files_clear() {
@@ -194,13 +193,14 @@ void files_clear() {
     p_fl = fopen("P.fl", "wb");
     Custumer info = {0, "\0", 0, 0, 0, 0,
                      "\0", 0};
-    fwrite(&info, PROGR_SIZ, 1, p_fl);
+    fwrite(&info, CUSTUMER_SIZE, 1, p_fl);
     fclose(p_fl);
 }
 
 
 int del_stud_by_key(int key) {
     Index del = get_ind_by_key(key);
+    printf("del pos = %d", del.pos);
     if (del.key != key)
         return 0;
     Index info = get_ind_by_pos(-1);
@@ -208,8 +208,8 @@ int del_stud_by_key(int key) {
         files_clear();
         return 1;
     }
-    Store last_stud = get_stud_by_pos(num_of_inds() - 1);
-    if (get_stud_by_key(key).first_progress_pos >= 0)
+    Store last_stud = get_store_by_pos(num_of_inds() - 1);
+    if (get_stud_by_key(key)._first_custumer_pos >= 0)
         del_all_progr_by_key(key);
     edit_stud_by_pos(del.pos, last_stud);
     Index last = get_ind_by_key(last_stud._index);
@@ -226,7 +226,6 @@ int del_stud_by_key(int key) {
 }
 
 int insert_index(Index ind) {
-    //printf("insert index start\n");
     int l = 0;
     int r = num_of_inds() - 1;
     while (l <= r) {
@@ -241,7 +240,6 @@ int insert_index(Index ind) {
             r = m - 1;
     }
     if (r > l) {
-        //printf("insert index return 0\n");
         return 0;
     }
     int insert_pos = l;
@@ -259,61 +257,53 @@ int insert_index(Index ind) {
 }
 
 int insert_store(Store stud) {
-    //printf("insert student start\n");
     Index ind = {stud._index, num_of_inds()};
     if (!insert_index(ind)) {
-        // printf("insert student return 0\n");
         return 0;
     }
     edit_stud_by_pos(ind.pos, stud);
-    //printf("insert student return 1\n");
     return 1;
 }
 
 int num_of_progr() {
     FILE *f = fopen("P.fl", "rb");
     Custumer info;
-    fread(&info, PROGR_SIZ, 1, f);
+    fread(&info, CUSTUMER_SIZE, 1, f);
     fclose(f);
 //    printf("info._mark = %d\n", info._mark);
     return info._mark;
 }
 
 int insert_custumer_by_key(int key, Custumer progr) {
-//    printf("insert progr start\n");
     if (!is_key(key)) {
-//        printf("insert progr return 0\n");
         return 0;
     }
     Custumer prev;
     Store stud = get_stud_by_key(key);
-    int prev_pos = stud.first_progress_pos;
+    int prev_pos = stud._first_custumer_pos;
     Custumer info = get_custumer_by_pos(-1);
-    int insert_pos = info.next_progress_pos;
-    if (stud.first_progress_pos < 0) {
-        stud.first_progress_pos = insert_pos;
+    int insert_pos = info._next_customer_pos;
+    if (stud._first_custumer_pos < 0) {
+        stud._first_custumer_pos = insert_pos;
         edit_stud_by_pos(get_ind_by_key(key).pos, stud);
     } else {
-        prev = get_custumer_by_pos(stud.first_progress_pos);
-        while (prev.next_progress_pos >= 0) {
-            prev_pos = prev.next_progress_pos;
-            prev = get_custumer_by_pos(prev.next_progress_pos);
+        prev = get_custumer_by_pos(stud._first_custumer_pos);
+        while (prev._next_customer_pos >= 0) {
+            prev_pos = prev._next_customer_pos;
+            prev = get_custumer_by_pos(prev._next_customer_pos);
         }
-        prev.next_progress_pos = info.next_progress_pos;
-//        printf("prev: pos = %d, subj = %s, next = %d\n", prev_pos, prev.product, prev.next_progress_pos);
+        prev._next_customer_pos = info._next_customer_pos;
         edit_progr_by_pos(prev_pos, prev);
     }
 
-    if (info._mark == info.next_progress_pos) {
+    if (info._mark == info._next_customer_pos) {
         ++info._mark;
-        ++info.next_progress_pos;
+        ++info._next_customer_pos;
     } else {
-        info.next_progress_pos = get_custumer_by_pos(insert_pos).next_progress_pos;
+        info._next_customer_pos = get_custumer_by_pos(insert_pos)._next_customer_pos;
     }
-//    printf("insert: pos = %d, subj = %s, next = %d\n", insert_pos, progr.product, progr.next_progress_pos);
     edit_progr_by_pos(insert_pos, progr);
     edit_progr_by_pos(-1, info);
-//    printf("insert progr return 1\n");
     return 1;
 }
 
@@ -338,7 +328,7 @@ void files_init() {
         p_fl = fopen("P.fl", "wb");
         Custumer info = {0, "\0", 0, 0, 0, 0,
                          "\0", 0};
-        fwrite(&info, PROGR_SIZ, 1, p_fl);
+        fwrite(&info, CUSTUMER_SIZE, 1, p_fl);
     }
     fclose(p_fl);
 }
@@ -365,17 +355,17 @@ void dump(FILE *out) {
     fprintf(out, "Num of stores = %d\nNum of customers = %d\n", siz, progr_siz);
     for (int i = 0; i < siz; ++i) {
         Index cur_ind = get_ind_by_pos(i);
-        Store cur_stud = get_stud_by_pos(cur_ind.pos);
+        Store cur_stud = get_store_by_pos(cur_ind.pos);
         fprintf(out, "-- %-20.20s %-20.20s | %06d \n",
                 cur_stud.address, cur_stud.name, cur_stud._index);
-        if (cur_stud.first_progress_pos >= 0) {
-            Custumer cur_progr = get_custumer_by_pos(cur_stud.first_progress_pos);
+        if (cur_stud._first_custumer_pos >= 0) {
+            Custumer cur_progr = get_custumer_by_pos(cur_stud._first_custumer_pos);
             for (int j = 0;; ++j) {
                 fprintf(out, "\t|-- %-20.20s | %d | %-20.20s\n",
                         cur_progr.product,
                         cur_progr.balance, cur_progr.gender);
-                if (cur_progr.next_progress_pos > 0) {
-                    cur_progr = get_custumer_by_pos(cur_progr.next_progress_pos);
+                if (cur_progr._next_customer_pos > 0) {
+                    cur_progr = get_custumer_by_pos(cur_progr._next_customer_pos);
                 } else break;
             }
         }
@@ -397,10 +387,10 @@ void print_progr(FILE *out, Custumer progr) {
 int progr_num_by_key(int key) {
     if (!is_key(key))
         return -1;
-    int pos = get_stud_by_key(key).first_progress_pos;
+    int pos = get_stud_by_key(key)._first_custumer_pos;
     int res = 0;
     while (pos >= 0) {
-        pos = get_custumer_by_pos(pos).next_progress_pos;
+        pos = get_custumer_by_pos(pos)._next_customer_pos;
         ++res;
     }
     return res;

@@ -30,7 +30,7 @@ int main() {
             fprintf(out, "Enter address:\n");
             fscanf(in, "%s", store.address);
 
-            store.first_progress_pos = -5;
+            store._first_custumer_pos = -5;
             insert_store(store);
             fprintf(out, "Success\n\n");
         } else if (strcmp(cmd, "insert-s") == 0) {
@@ -54,7 +54,7 @@ int main() {
             fscanf(in, "%s", custumer.gender);
 
 
-            custumer.next_progress_pos = -5;
+            custumer._next_customer_pos = -5;
             insert_custumer_by_key(key, custumer);
             fprintf(out, "Success\n\n");
         } else if (strcmp(cmd, "get-m") == 0) {
@@ -88,7 +88,6 @@ int main() {
             Store stud = get_stud_by_key(key);
             fprintf(out, "By store name - 1\n");
             fprintf(out, "By address - 2\n");
-            fprintf(out, "By store size - 3\n");
 
             fprintf(out, "Enter number, what you want to change(int):\n");
             int num;
@@ -99,9 +98,6 @@ int main() {
             } else if (num == 2) {
                 fprintf(out, "Enter new address:\n");
                 fscanf(in, "%s", stud.address);
-            } else if (num == 6) {
-                fprintf(out, "Enter new size(int):\n");
-                fscanf(in, "%d", &(stud.size));
             } else {
                 fprintf(out, "Incorrect number, try again\n");
                 continue;
@@ -126,7 +122,7 @@ int main() {
             fprintf(out, "Enter balance(int):\n");
             fscanf(in, "%d", &balance);
 
-            int pos = get_custumer_pos(key, product_name, balance);
+            int pos = get_customer_pos(key, product_name, balance);
             if (pos == INVALID_PROGR_MARK) {
                 fprintf(out, "This custumer doesn't exist\n\n");
                 continue;
@@ -144,11 +140,11 @@ int main() {
             }
             else if (num == 2) {
                 fprintf(out, "Enter new balance:\n");
-                fscanf(in, "%d", custumer.balance);
+                fscanf(in, "%d", &custumer.balance);
             }
             else if (num == 3) {
                 fprintf(out, "Enter new gender(char):\n");
-                fscanf(in, "%d", custumer.gender);
+                fscanf(in, "%s", custumer.gender);
             }
             else {
                 fprintf(out, "Incorrect number, try again\n");
@@ -175,7 +171,7 @@ int main() {
             fprintf(out, "Enter balance:\n");
             fscanf(in, "%d", &balance);
 
-            Custumer progr = get_progr_by_args(key, subj, balance);
+            Custumer progr = get_customer_by_args(key, subj, balance);
             if (progr._mark == INVALID_PROGR_MARK) {
                 fprintf(out, "This custumer doesn't exist\n\n");
                 continue;
@@ -202,7 +198,7 @@ int main() {
             fprintf(out, "Enter balance(int)a:\n");
             fscanf(in, "%d", &balance);
 
-            int pos = get_custumer_pos(key, product_name, balance);
+            int pos = get_customer_pos(key, product_name, balance);
             if (pos == INVALID_PROGR_MARK) {
                 fprintf(out, "This custumer doesn't exist\n\n");
                 continue;
