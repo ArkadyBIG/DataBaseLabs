@@ -334,7 +334,6 @@ void files_init() {
 }
 
 void help(FILE *out) {
-    fprintf(out, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
     fprintf(out, "'insert-m' - Insert store\n");
     fprintf(out, "'insert-s' - Insert custumer\n");
     fprintf(out, "'get-m' - Find store\n");
@@ -345,7 +344,6 @@ void help(FILE *out) {
     fprintf(out, "'del-s' - Delete custumer\n");
     fprintf(out, "'dump' - Print all store and customers\n");
     fprintf(out, "'exit' - To EXIT\n");
-    fprintf(out, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n\n");
 }
 
 void dump(FILE *out) {
